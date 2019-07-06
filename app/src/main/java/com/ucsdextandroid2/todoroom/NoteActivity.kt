@@ -49,4 +49,22 @@ class NoteActivity: AppCompatActivity() {
         }
     }
 
+    private fun saveNote(){
+        if (titleView.text.isNotEmpty() || textView.text.isNotEmpty()){
+            val note = Note(titleView.text.toString(), textView.text.toString())
+            AppDatabase.get(this).noteDao().insertNote(note)
+            setResult(android.app.Activity.RESULT_OK)
+        }
+        else {
+            setResult(android.app.Activity.RESULT_CANCELED)
+        }
+    }
+    override fun onBackPressed(){
+        saveNote()
+        super.onBackPressed()
+
+    }
+    if(requestCode==Requet_Code && resultCode== Activity.Result_OK){
+
+    }
 }

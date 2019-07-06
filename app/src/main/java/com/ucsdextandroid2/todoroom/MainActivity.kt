@@ -31,13 +31,89 @@ class MainActivity: AppCompatActivity() {
         val viewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
 
         val recyclerView: RecyclerView = findViewById(R.id.am_recycler_view)
+        val adapter = NotesAdapter()
+        recyclerView.layoutManager = StaggeredGridLayoutManager(2, RecyclerView.VERTICAL)
+        recyclerView.adapter = adapter
+        adapter.onNoteClickListener = { note > startActivity(NoteActivity.createIntent(this, note)) }
+      adapter.registerAdapterDataObserver(object: Recyclerview.AdapterDataObserver(){
+          override fun onItemRangeInserted(positionStart: Int, itemCount: Int){
+              super.onItemRangeInserted(positionStart, itemCount)
 
+              if(positionStart == 0)
+                  recyclerView.layoutManager?.scrollToPosition(position: 0)
+
+          }
+      })
+
+        val itemTouchHelper: ItemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.START or ItemTouchHelper.END))
+            itemTouchHelper.attachToRecyclerView(recyclerView)
+        override fun onMove(recyclerView: RecylerView.ViewHolder, direction: Int)
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+        val note = adapter.removeItem(viewHolder.adapterPosition)
+    }
+
+        if(note != null)
+            AppDatabase.get(this@MainActivity).noteDao().deleteNote(note)
         val addNoteView: View = findViewById(R.id.am_add_note)
+        addNoteView.setOnClickListener{
+            startActivityForResult(NoteActivity.createIntent(this), 7)
+
+            adapter.submitList(notes)
+    }
+  onDataChanged()
+        AppDatabase.get(this).noteDao().getAllNotesLiveData().observe(this), observer<list<note>>{
+          notes
+            private fun toastforNotes(){
+                val notes = AppDatabase.get(this).noteDao().getAllNotes()
+                notes.forEach{
+                    Log.d("MainActivity", it.title)
+
+                }
+                Toast.makeText(this, "total Number of Notes: " + notes.size, Toast.LENGTH_SHORT).show()
+        })
+
+}
+private fun toastforNotes(){
+    val notes = AppDatabase.get(this).noteDao().getAllNotes()
+    notes.forEach{
+        Log.d("MainActivity", it.title)
+
+    }
+    Toast.makeText(this, "total Number of Notes: " + notes.size, Toast.LENGTH_SHORT).show()
+}
+    override fun onActivityTrsult(requestcode: Int, ResultCode: Int, data: Intent?){
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
 }
 
-class NotesAdapter {
+ private NotesAdapter : ListAdapter<Note, NoteCardViewHolder>(listDiffer){
+        var onNoteClickListener: ((Note)-> Unit)? = null
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteCardViewHolder{
+        vak viewHolder = NorecardviewHolder.inflate(parent)
+        viewHolder.itemView.setOnClickListener{
+            val item = get Item(viewHolder.adapterPosition)
+            if(item!= null){
+                onNoteclickListener?.invoke(item)
+
+            }
+        }
+        return NoteCardViewHolder.inflate(parent)
+    }
+        override fun OnbindViewHolder(holder: NoteCardViewHolder, position: Int)
+    companion object{
+        val listDiffer= DiffUtil.Itemcallback<Note>=object:DiffUtil.ItemCallBack<Note>(){
+            override fun areItemsTheSame(oldItem: Note, newItem:note): Boolean {
+                return oldItem.datetime == newItem.datetime
+
+            }
+            override fun areContentsTheSame(oldItem: Note, newItem:Note): Boolean{
+                return oldItem == newItem
+            }
+        }
+    }
+}
 
 }
 
@@ -59,6 +135,30 @@ private class NoteCardViewHolder private constructor(view: View) : RecyclerView.
     }
 
     fun bind(note: Note?) {
+if(note !=null){
+    titleView.setText(note.title)
+    textView.setText=note.text
+
+    if(note.imageUri !=null) {
+        image.isVisible= true
+        image.setImageURI(note.imageUri)
+
+    }
+    else{
+        image.isVisible=false
+    }
+}
+        else{
+            titleView.text=""
+    textview.text=""
+    image.isvisible=false
+        }
+        fun removeItem(position:Int): Note?{
+            val note = getItem(position)
+
+
+            return note
+        }
 
     }
 

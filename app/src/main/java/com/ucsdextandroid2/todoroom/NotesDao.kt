@@ -11,7 +11,10 @@ import androidx.room.Query
 /**
  * Created by rjaylward on 2019-07-05
  */
-
+@Dao
 interface NotesDao {
-
+@Insert
+@Insert(onConflict)
+@query ("SELECT * FROM notes ORDER BY datetime DESC")
+fun getAllNotesLiveData()LIveData<List<Note>>
 }
